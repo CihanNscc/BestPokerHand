@@ -5,7 +5,7 @@
   const imageUrl = "https://deckofcardsapi.com/static/img/";
   const testUrl = "https://prog2700.onrender.com/pokerhandtest/";
   const specificHandUrl =
-    "https://www.deckofcardsapi.com/api/deck/new/shuffle/?cards=3S,2S,AS,4S,5S";
+    "https://www.deckofcardsapi.com/api/deck/new/shuffle/?cards=3S,2D,AS,4S,5S";
   let cards = [];
   let hand = {};
   const ranks = {
@@ -187,28 +187,22 @@
       .catch((error) => console.error("Error dealing cards:", error));
   };
 
-  const testHand = (handType) => {
-    return new Promise((resolve, reject) => {
-      const url = testUrl + handType;
-      let testHand = [];
+  const testHand = async (handType) => {
+    const url = testUrl + handType;
+    let testHand = [];
 
-      fetch(url)
-        .then((response) => response.json())
-        .then((data) => {
-          testHand = data.cards.map((card) => card.code);
-        })
-        .then(() => {
-          hand = evaluateHand(testHand);
-        })
-        .then(() => {
-          displayHand(hand);
-          resolve();
-        })
-        .catch((error) => {
-          console.error("Error fetching cards:", error);
-          reject(error);
-        });
-    });
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      testHand = data.cards.map((card) => card.code);
+
+      const evaluatedHand = evaluateHand(testHand);
+      displayHand(evaluatedHand);
+      return evaluatedHand;
+    } catch (error) {
+      console.error("Error fetching cards:", error);
+      throw error;
+    }
   };
 
   const runAllTests = async () => {
