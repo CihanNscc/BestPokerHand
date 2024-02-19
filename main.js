@@ -46,6 +46,7 @@
 
   function evaluateHand(cards) {
     cards.sort((a, b) => ranks[a[0]] - ranks[b[0]]);
+    let handName = "";
 
     if (
       cards[0][0] === "0" &&
@@ -59,9 +60,83 @@
       cards[3][1] === cards[4][1] &&
       cards[4][1] === cards[0][1]
     ) {
-      return { hand: "Royal Flush", sortedCards: cards };
+      handName = "Royal Flush";
+    } else if (isFlush(cards) && isStraight(cards)) {
+      handName = "Straight Flush";
+    } else if (checkNumOfSameRankCards(cards, 4)) {
+      handName = "Four of a Kind";
+    } else if (
+      checkNumOfSameRankCards(cards, 3) &&
+      checkNumOfSameRankCards(cards, 2)
+    ) {
+      handName = "Full House";
+    } else if (isFlush(cards)) {
+      handName = "Flush";
+    } else if (isStraight(cards)) {
+      handName = "Straight";
+    } else if (checkNumOfSameRankCards(cards, 3)) {
+      handName = "Three of a Kind";
+    } else if (isTwoPair(cards)) {
+      handName = "Two Pair";
+    } else if (checkNumOfSameRankCards(cards, 2)) {
+      handName = "One Pair";
+    } else {
+      handName = "High Card";
     }
+
+    return { hand: handName, sortedCards: cards };
   }
+
+  const isFlush = (cards) => {
+    return (
+      cards[0][1] === cards[1][1] &&
+      cards[1][1] === cards[2][1] &&
+      cards[2][1] === cards[3][1] &&
+      cards[3][1] === cards[4][1] &&
+      cards[4][1] === cards[0][1]
+    );
+  };
+
+  const isStraight = (cards) => {
+    if (
+      cards[0][0] === "A" &&
+      cards[1][0] === "1" &&
+      cards[2][0] === "2" &&
+      cards[3][0] === "3" &&
+      cards[4][0] === "4"
+    ) {
+      return true;
+    }
+
+    const cardRanks = cards.map((card) => ranks[card[0]]);
+    for (let i = 0; i < cardRanks.length - 1; i++) {
+      if (cardRanks[i + 1] - cardRanks[i] !== 1) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const isTwoPair = (cards) => {
+    const rankCounts = countCards(cards);
+    return (
+      Object.values(rankCounts).filter((count) => count === 2).length === 2
+    );
+  };
+
+  const countCardRanks = (cards) => {
+    const rankCounts = {};
+    for (const card of cards) {
+      const rank = card[0];
+      rankCounts[rank] = (rankCounts[rank] || 0) + 1;
+    }
+    return rankCounts;
+  };
+
+  const checkNumOfSameRankCards = (cards, numOfSameRankCards) => {
+    const rankCounts = countCardRanks(cards);
+    return Object.values(rankCounts).includes(numOfSameRankCards);
+  };
 
   const displayHand = (result) => {
     document.write(
