@@ -4,6 +4,8 @@
   const drawUrl = "/draw/?count=5";
   const imageUrl = "https://deckofcardsapi.com/static/img/";
   const testUrl = "https://prog2700.onrender.com/pokerhandtest/";
+  const specificHandUrl =
+    "https://www.deckofcardsapi.com/api/deck/new/shuffle/?cards=3S,2S,AS,4S,5S";
   let cards = [];
   let hand = {};
   const ranks = {
@@ -36,8 +38,9 @@
     "random",
   ];
 
-  const getDeck = async () => {
-    const data = await fetch(deckUrl + shuffleUrl);
+  const getDeck = async (specificHand = false) => {
+    const url = specificHand ? specificHandUrl : deckUrl + shuffleUrl;
+    const data = await fetch(url);
     const response = await data.json();
     return response.deck_id;
   };
@@ -98,6 +101,11 @@
       handName = "High Card";
     }
 
+    if (isStraightWithLowAce(cards)) {
+      const lastCard = cards.pop();
+      cards.unshift(lastCard);
+    }
+
     return { hand: handName, sortedCards: cards };
   };
 
@@ -111,14 +119,18 @@
     );
   };
 
-  const isStraight = (cards) => {
-    if (
+  const isStraightWithLowAce = (cards) => {
+    return (
       cards[0][0] === "2" &&
       cards[1][0] === "3" &&
       cards[2][0] === "4" &&
       cards[3][0] === "5" &&
       cards[4][0] === "A"
-    ) {
+    );
+  };
+
+  const isStraight = (cards) => {
+    if (isStraightWithLowAce(cards)) {
       return true;
     }
 
@@ -164,8 +176,8 @@
     document.write(`</div>`);
   };
 
-  const dealCards = () => {
-    getDeck()
+  const dealCards = (specificHand = false) => {
+    getDeck(specificHand)
       .then(drawCards)
       .then(() => {
         hand = evaluateHand(cards);
@@ -205,6 +217,13 @@
     }
   };
 
-  document.getElementById("deckApiButton").addEventListener("click", dealCards);
+  document.getElementById("deckApiButton").addEventListener("click", () => {
+    dealCards();
+  });
   document.getElementById("testButton").addEventListener("click", runAllTests);
+  document
+    .getElementById("specificHandButton")
+    .addEventListener("click", () => {
+      dealCards(true);
+    });
 })();
