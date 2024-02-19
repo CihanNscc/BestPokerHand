@@ -1,8 +1,9 @@
-(function () {
+(() => {
   const deckUrl = "https://deckofcardsapi.com/api/deck/";
   const shuffleUrl = "new/shuffle/?deck_count=1";
   const drawUrl = "/draw/?count=5";
   const imageUrl = "https://deckofcardsapi.com/static/img/";
+  const testUrl = "https://prog2700.onrender.com/pokerhandtest/";
   let cards = [];
   let hand = {};
   const ranks = {
@@ -21,14 +22,27 @@
     2: 2,
     0: 10,
   };
+  const testTargets = [
+    "royalflush",
+    "straightflush",
+    "fourofakind",
+    "fullhouse",
+    "flush",
+    "straight",
+    "threeofakind",
+    "twopair",
+    "onepair",
+    "highcard",
+    "random",
+  ];
 
-  async function getDeck() {
+  const getDeck = async () => {
     const data = await fetch(deckUrl + shuffleUrl);
     const response = await data.json();
     return response.deck_id;
-  }
+  };
 
-  async function drawCards(deckId) {
+  const drawCards = async (deckId) => {
     try {
       const data = await fetch(deckUrl + deckId + drawUrl);
       const response = await data.json();
@@ -36,7 +50,7 @@
     } catch (error) {
       return console.error("Error fetching cards:", error);
     }
-  }
+  };
 
   const addCardsToList = (result) => {
     result["cards"].forEach((element) => {
@@ -44,7 +58,7 @@
     });
   };
 
-  function evaluateHand(cards) {
+  const evaluateHand = (cards) => {
     cards.sort((a, b) => ranks[a[0]] - ranks[b[0]]);
     let handName = "";
 
@@ -85,7 +99,7 @@
     }
 
     return { hand: handName, sortedCards: cards };
-  }
+  };
 
   const isFlush = (cards) => {
     return (
@@ -99,11 +113,11 @@
 
   const isStraight = (cards) => {
     if (
-      cards[0][0] === "A" &&
-      cards[1][0] === "1" &&
-      cards[2][0] === "2" &&
-      cards[3][0] === "3" &&
-      cards[4][0] === "4"
+      cards[0][0] === "2" &&
+      cards[1][0] === "3" &&
+      cards[2][0] === "4" &&
+      cards[3][0] === "5" &&
+      cards[4][0] === "A"
     ) {
       return true;
     }
@@ -118,7 +132,7 @@
   };
 
   const isTwoPair = (cards) => {
-    const rankCounts = countCards(cards);
+    const rankCounts = countCardRanks(cards);
     return (
       Object.values(rankCounts).filter((count) => count === 2).length === 2
     );
@@ -150,7 +164,7 @@
     document.write(`</div>`);
   };
 
-  function dealCards() {
+  const dealCards = () => {
     getDeck()
       .then(drawCards)
       .then(() => {
@@ -159,7 +173,38 @@
       .then(() => (cards = []))
       .then(() => displayHand(hand))
       .catch((error) => console.error("Error dealing cards:", error));
-  }
+  };
+
+  const testHand = (handType) => {
+    return new Promise((resolve, reject) => {
+      const url = testUrl + handType;
+      let testHand = [];
+
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          testHand = data.cards.map((card) => card.code);
+        })
+        .then(() => {
+          hand = evaluateHand(testHand);
+        })
+        .then(() => {
+          displayHand(hand);
+          resolve();
+        })
+        .catch((error) => {
+          console.error("Error fetching cards:", error);
+          reject(error);
+        });
+    });
+  };
+
+  const runAllTests = async () => {
+    for (const element of testTargets) {
+      await testHand(element);
+    }
+  };
 
   document.getElementById("deckApiButton").addEventListener("click", dealCards);
+  document.getElementById("testButton").addEventListener("click", runAllTests);
 })();
